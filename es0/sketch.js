@@ -29,7 +29,12 @@ let puntatoreY = 0;
 // SETUP  -  una volta sola, all'avvio
 // ============================================================
 function setup() {
-  createCanvas(windowWidth, windowHeight).parent("contenitore");
+  const cont = document.getElementById("contenitore");
+  if (cont) {
+    createCanvas(windowWidth, windowHeight).parent(cont);
+  } else {
+    createCanvas(windowWidth, windowHeight);
+  }
   colorMode(RGB);
   coloreLontano = color(CONFIG.formaLontano);
   coloreVicino = color(CONFIG.formaVicino);
