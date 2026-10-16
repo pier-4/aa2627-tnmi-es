@@ -4,6 +4,8 @@
 // Autore: Sarah Louise Kinsella
 // Procedimento: la foto è scomposta in anelli circolari concentrici; ogni
 // anello ruota secondo la posizione del mouse e al centro tornano a combaciare.
+// Un click col tasto sinistro ferma la composizione e la lascia così com'è,
+// un altro click la rimette in movimento.
 //
 // Obiettivo: scomporre una fotografia e ricomporla progressivamente, per intero
 // o in parte, fino a un risultato inatteso in cui la figura cambia di senso,
@@ -24,10 +26,12 @@
 // ============================================================
 // CONFIG  -  tutti i parametri da modificare stanno qui
 // ============================================================
-const numeroCerchi = 12;      // quanti anelli concentrici compongono la scomposizione
-const diametroMassimo = 600;  // diametro dell'anello esterno (l'altezza della tela)
-const rotazioneMassima = 1.5; // radianti: quanto ruota l'anello più interno a piena distanza
-const morbidezza = 0.1;       // da 0 a 1: quanto il movimento segue il mouse (1 = immediato)
+const numeroCerchi = 12; // quanti anelli concentrici compongono la scomposizione
+const diametroMassimo = 600; // diametro dell'anello esterno (l'altezza della tela)
+const rotazioneMassima = 2.5; // radianti: quanto ruota l'anello più interno a piena distanza
+const morbidezza = 0.3; // da 0 a 1: quanto il movimento segue il mouse (1 = immediato)
+const ampiezzaInversione = 0.5; // quanto è dolce l'inversione sopra e sotto il centro
+// (0 = netta come prima, 1 = il verso segue tutto l'angolo e varia al massimo)
 
 let fotografia;
 let scalaFoto;
@@ -37,7 +41,9 @@ let altezzaFoto;
 // stato del mouse: prima che entri nella tela vale il centro, così si parte
 // con l'immagine intera
 let dentroTela = false;
-let quanto = 0;               // distanza attuale del mouse dal centro, con scorrimento morbido
+let quanto = 0; // distanza attuale del mouse dal centro, con scorrimento morbido
+let versoAttuale = 1; // segno della rotazione al momento presente
+let congelato = false; // fermo immagine: si attiva e si disattiva col click sinistro
 
 // ============================================================
 // SETUP  -  una volta sola, all'avvio
@@ -61,17 +67,16 @@ async function setup() {
 function draw() {
   background(0);
 
-  // il mouse lontano dalla tela si comporta come al centro: l'immagine si ricompone
-  let bersaglio = dentroTela
-    ? map(dist(mouseX, mouseY, width / 2, height / 2), 0, dist(0, 0, width / 2, height / 2), 0, 1)
-    : 0;
+  // se la composizione non è congelata, segue il mouse
+  if (!congelato) {
+    // scorrimento morbido verso la distanza bersaglio
+    quanto = lerp(quanto, distanzaBersaglio(), morbidezza);
 
-  // scorrimento morbido verso la distanza bersaglio
-  quanto = lerp(quanto, bersaglio, morbidezza);
-
-  // il verso (orario o antiorario) lo decide la metà in cui sta il mouse
-  const angoloMouse = atan2(mouseY - height / 2, mouseX - width / 2);
-  const segno = cos(angoloMouse) >= 0 ? 1 : -1;
+    // il verso (orario o antiorario) lo decide l'angolo del mouse rispetto al
+    // centro: a destra positivo, a sinistra negativo, con passaggio graduale
+    // sopra e sotto, così da non invertirsi di colpo
+    versoAttuale = versoBersaglio();
+  }
 
   // prima la foto per intero, poi gli anelli dal più grande al più piccolo:
   // ogni cerchio riscrive quello precedente dentro la propria circonferenza
@@ -85,7 +90,7 @@ function draw() {
     // gli anelli più interni ruotano di più: al centro della foto il moltiplicatore
     // (i + 1) raggiunge numeroCerchi, quindi teniamo conto anche di quello
     const rotazione =
-      quanto * rotazioneMassima * ((i + 1) / numeroCerchi) * segno;
+      quanto * rotazioneMassima * ((i + 1) / numeroCerchi) * versoAttuale;
 
     push();
     beginClip();
@@ -98,7 +103,37 @@ function draw() {
   pop();
 }
 
-function mouseOver() {
+// distanzaBersaglio  -  quanto è lontano il mouse dal centro (0 al centro, 1 al bordo)
+function distanzaBersaglio() {
+  if (!dentroTela) return 0;
+  return map(
+    dist(mouseX, mouseY, width / 2, height / 2),
+    0,
+    dist(0, 0, width / 2, height / 2),
+    0,
+    1,
+  );
+}
+
+// versoBersaglio  -  segno della rotazione, deciso dall'angolo del mouse
+function versoBersaglio() {
+  const angoloMouse = atan2(mouseY - height / 2, mouseX - width / 2);
+  return constrain(cos(angoloMouse) / ampiezzaInversione, -1, 1);
+}
+
+// mousePressed  -  il tasto sinistro ferma la composizione e la sblocca di nuovo
+function mousePressed() {
+  // in p5.js 2 mouseButton è un oggetto con left, right e center
+  if (!mouseButton.left) return;
+  congelato = !congelato;
+  if (congelato) {
+    // il fermo immagine corrisponde esattamente al punto del click
+    quanto = distanzaBersaglio();
+    versoAttuale = versoBersaglio();
+  }
+}
+
+function mouseMoved() {
   dentroTela = true;
 }
 

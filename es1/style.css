@@ -1,8 +1,24 @@
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #000;
+}
+
 canvas {
   display: block;
+}
+
+.istruzione {
+  margin: 0.8rem 0 0;
+  font: 0.9rem system-ui, sans-serif;
+  color: #888;
 }
