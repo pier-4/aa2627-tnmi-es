@@ -20,6 +20,7 @@
       "git status*": "allow",
       "git diff*": "allow",
       "git log*": "allow",
+      "git ls-files*": "allow",
       "git remote*": "allow",
       "git add *": "allow",
       "git commit *": "allow"
