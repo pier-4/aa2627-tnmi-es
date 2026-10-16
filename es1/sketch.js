@@ -1,11 +1,12 @@
 // E1. Ricombinare una fotografia
 //
-// Fotografia: https://unsplash.com/@sarahlouisekinsella
+// Fotografia: https://unsplash.com/it/foto/fiore-di-dalia-con-gocce-dacqua-_v9CTt9WWqs
 // Autore: Sarah Louise Kinsella
 // Procedimento: la foto è scomposta in anelli circolari concentrici; ogni
 // anello ruota secondo la posizione del mouse e al centro tornano a combaciare.
-// Un click col tasto sinistro ferma la composizione e la lascia così com'è,
-// un altro click la rimette in movimento.
+// La posizione verticale del mouse invece cambia il numero degli anelli: pochi
+// al centro, molti verso il bordo alto o basso. Un click col tasto sinistro
+// ferma la composizione e la lascia così com'è, un altro click la rimette in moto.
 //
 // Obiettivo: scomporre una fotografia e ricomporla progressivamente, per intero
 // o in parte, fino a un risultato inatteso in cui la figura cambia di senso,
@@ -26,7 +27,9 @@
 // ============================================================
 // CONFIG  -  tutti i parametri da modificare stanno qui
 // ============================================================
-const numeroCerchi = 12; // quanti anelli concentrici compongono la scomposizione
+const numeroCerchiMin = 6; // quanti anelli quando il mouse è al centro (Y)
+const numeroCerchiMax = 20; // quanti anelli quando il mouse è sul bordo alto o basso
+// scambiare i due valori qui sopra inverte la direzione dell'effetto
 const diametroMassimo = 600; // diametro dell'anello esterno (l'altezza della tela)
 const rotazioneMassima = 2.5; // radianti: quanto ruota l'anello più interno a piena distanza
 const morbidezza = 0.3; // da 0 a 1: quanto il movimento segue il mouse (1 = immediato)
@@ -43,6 +46,7 @@ let altezzaFoto;
 let dentroTela = false;
 let quanto = 0; // distanza attuale del mouse dal centro, con scorrimento morbido
 let versoAttuale = 1; // segno della rotazione al momento presente
+let numeroCerchiAttuale = numeroCerchiMin; // anelli al momento presente, deciso dalla Y
 let congelato = false; // fermo immagine: si attiva e si disattiva col click sinistro
 
 // ============================================================
@@ -76,6 +80,14 @@ function draw() {
     // centro: a destra positivo, a sinistra negativo, con passaggio graduale
     // sopra e sotto, così da non invertirsi di colpo
     versoAttuale = versoBersaglio();
+
+    // il numero di anelli lo decide la distanza verticale dal centro: al centro
+    // resta al valore minimo, verso il bordo alto o basso cresce
+    numeroCerchiAttuale = lerp(
+      numeroCerchiAttuale,
+      lerp(numeroCerchiMin, numeroCerchiMax, influenzaY()),
+      morbidezza,
+    );
   }
 
   // prima la foto per intero, poi gli anelli dal più grande al più piccolo:
@@ -84,13 +96,13 @@ function draw() {
   translate(width / 2, height / 2);
   image(fotografia, 0, 0, larghezzaFoto, altezzaFoto);
 
-  const passo = diametroMassimo / numeroCerchi;
-  for (let i = 0; i < numeroCerchi; i++) {
+  const passo = diametroMassimo / numeroCerchiAttuale;
+  for (let i = 0; i < numeroCerchiAttuale; i++) {
     const diametro = diametroMassimo - i * passo;
     // gli anelli più interni ruotano di più: al centro della foto il moltiplicatore
-    // (i + 1) raggiunge numeroCerchi, quindi teniamo conto anche di quello
+    // (i + 1) raggiunge il numero di anelli, quindi teniamo conto anche di quello
     const rotazione =
-      quanto * rotazioneMassima * ((i + 1) / numeroCerchi) * versoAttuale;
+      quanto * rotazioneMassima * ((i + 1) / numeroCerchiAttuale) * versoAttuale;
 
     push();
     beginClip();
@@ -121,6 +133,13 @@ function versoBersaglio() {
   return constrain(cos(angoloMouse) / ampiezzaInversione, -1, 1);
 }
 
+// influenzaY  -  distanza verticale dal centro (0 al centro, 1 al bordo alto o basso)
+// alta e bassa valgono uguale: la distanza è sempre positiva
+function influenzaY() {
+  if (!dentroTela) return 0;
+  return constrain(abs(mouseY - height / 2) / (height / 2), 0, 1);
+}
+
 // mousePressed  -  il tasto sinistro ferma la composizione e la sblocca di nuovo
 function mousePressed() {
   // in p5.js 2 mouseButton è un oggetto con left, right e center
@@ -130,6 +149,7 @@ function mousePressed() {
     // il fermo immagine corrisponde esattamente al punto del click
     quanto = distanzaBersaglio();
     versoAttuale = versoBersaglio();
+    numeroCerchiAttuale = lerp(numeroCerchiMin, numeroCerchiMax, influenzaY());
   }
 }
 

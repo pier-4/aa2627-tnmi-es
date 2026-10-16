@@ -16,6 +16,7 @@
       "head *": "allow",
       "grep *": "allow",
       "wc *": "allow",
+      "glob *": "allow",
       "mkdir *": "allow",
       "git status*": "allow",
       "git diff*": "allow",
@@ -23,7 +24,8 @@
       "git ls-files*": "allow",
       "git remote*": "allow",
       "git add *": "allow",
-      "git commit *": "allow"
+      "git commit *": "allow",
+      "git push*": "allow"
     }
   }
 }

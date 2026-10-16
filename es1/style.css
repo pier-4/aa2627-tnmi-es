@@ -22,3 +22,7 @@ canvas {
   font: 0.9rem system-ui, sans-serif;
   color: #888;
 }
+
+.istruzione + .istruzione {
+  margin-top: 0.3rem;
+}
