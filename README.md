@@ -1,5 +1,7 @@
 # Tecniche dei nuovi media integrati 2026/27: esercitazioni
 
+Lavori pubblicati: https://pier-4.github.io/aa2627-tnmi-es/
+
 Repository personale per le esercitazioni del corso di **Tecniche dei nuovi media integrati**, Accademia di Belle Arti di Frosinone.
 
 Le specifiche precise, con obiettivi, vincoli e modalità di realizzazione, si trovano nella sezione [Attività](https://codestesie.it/aa2627/tnmi/attivita/) del sito del corso.
@@ -10,7 +12,7 @@ Servono **Visual Studio Code**, **Git**, **OpenCode** e due estensioni, OpenCode
 
 Serve anche un **profilo su [github.com](https://github.com/signup)**. Il nome utente comparirà negli indirizzi dei propri lavori, quindi conviene sceglierlo breve e leggibile. Registrandosi con la posta dell'Accademia si può poi chiedere il [GitHub Student Developer Pack](https://education.github.com/pack), che dà gratuitamente il piano Pro.
 
-Al primo avvio l'agente sceglie da sé un modello gratuito, e per cambiarlo si scrive `/models` nella conversazione e si sceglie dall'elenco; per usare modelli a pagamento occorre prima collegare un account con `/connect`.
+Al primo avvio l'agente sceglie da sé un modello gratuito, e per cambiarlo si scrive `/models` nella conversazione e si sceglie dall'elenco; per usare modelli a pagamento occorre prima collegare un account con `/connect`. Se l'agente si ferma per i limiti dei modelli gratuiti, le soluzioni sono nel capitolo [Se l'agente si ferma](https://codestesie.it/guide/vscode-opencode/#9-se-lagente-si-ferma) della guida.
 
 Le scorciatoie da tastiera indicate qui e più avanti sono quelle di Windows: su macOS, al posto di `Ctrl`, si usa `Cmd`.
 
@@ -33,7 +35,7 @@ Una volta sola, all'inizio del corso. I primi due passaggi si fanno **sul sito d
    Si incolla l'indirizzo copiato, si indica la cartella dove mettere il repository e, alla domanda se aprirlo, si risponde di sì.
 4. **Personalizzare il repository con il proprio nome**, con il comando `/inizio`. \
    La chat di OpenCode, che al primo avvio è chiusa, si apre con la piccola icona di OpenCode in alto a destra nel pannello attivo: `/inizio` si scrive nel campo editabile centrale. \
-   Il comando scrive il nome nelle pagine e l'indirizzo pubblico in questo file, così gli indirizzi che si leggono qui sono già i propri. Se OpenCode chiede il permesso di eseguire qualche comando, è normale: per i comandi del corso si può rispondere di sì.
+   Il comando scrive il nome nelle pagine e l'indirizzo pubblico in questo file, così gli indirizzi che si leggono qui sono già i propri. OpenCode chiede conferma solo per poche operazioni, per esempio per modificare le proprie istruzioni: per i comandi del corso si può rispondere di sì.
 
 ## Come si lavora
 
@@ -79,6 +81,8 @@ Cinque comandi sono stati scritti per questo corso e funzionano solo in questo r
 - `/verifica es1`: confronta il lavoro con i vincoli della consegna e dice quali non sono rispettati;
 - `/consegna es1`: controlla, pubblica e ricorda l'indirizzo da segnalare;
 - `/aggiorna`: porta i file del corso all'ultima versione del modello, senza toccare le esercitazioni.
+
+Gli stessi cinque comandi funzionano anche nella chat di GitHub Copilot, per chi usa quella.
 
 Gli altri sono di OpenCode e funzionano in qualsiasi cartella. I più utili:
 
