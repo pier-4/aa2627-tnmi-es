@@ -7,7 +7,7 @@
 // La posizione verticale del mouse invece cambia il numero degli anelli: pochi
 // al centro, molti verso il bordo alto o basso. Un click col tasto sinistro
 // ferma la composizione e la lascia così com'è, un altro click la rimette in moto.
-// Comandi: H apre e chiude l'aiuto, S salva il fotogramma; il pannello è sotto la tela.
+// Comandi: H apre e chiude l'aiuto, S salva il fotogramma; il pannello è sopra la tela.
 //
 // Obiettivo: scomporre una fotografia e ricomporla progressivamente, per intero
 // o in parte, fino a un risultato inatteso in cui la figura cambia di senso,
