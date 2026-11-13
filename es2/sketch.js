@@ -6,8 +6,9 @@
 //       (file Anton-Regular.ttf nella cartella dell'esercitazione)
 // Composizione: le parole formano un blocco tipografico centrato, con una
 // parola dominante più grande. A riposo le lettere vibrano appena; il click
-// attiva il comportamento della parola più vicina al cursore, un tasto
-// qualsiasi passa alla parola successiva e ne attiva il comportamento.
+// attiva il comportamento della parola più vicina al cursore, la freccia giù
+// passa alla parola successiva (più in basso nell'elenco) e la freccia su a
+// quella precedente (più in alto), attivandone il comportamento.
 //
 // Obiettivo: far generare una composizione tipografica che cambi,
 // autonomamente o grazie all'interazione dell'utente, mantenendo una coerenza
@@ -100,7 +101,7 @@ const TUMB_DURATA = 180; // fotogrammi totali del comportamento
 const TUMB_VELOCITA_INIZIALE = 8; // spinta verso il basso al primo fotogramma
 const TUMB_GRAVITA = 3.5; // accelerazione verso il bordo inferiore
 const TUMB_ATTRITO_CADUTA = 1; // nessuna frenata durante la caduta
-const TUMB_BORDO = ALTEZZA_TELA - 15; // quota del bordo inferiore per le lettere
+const TUMB_MARGINE = 12; // distanza fra l'altezza delle lettere e il bordo basso
 const TUMB_DURATA_SCHIACCIAMENTO = 4; // fotogrammi in cui resta schiacciata
 const TUMB_SCHIACCIAMENTO_X = 1.35; // allargamento orizzontale all'impatto
 const TUMB_SCHIACCIAMENTO_Y = 0.55; // riduzione verticale all'impatto
@@ -130,8 +131,11 @@ const SBAM_RITORNO_CASA = 0.14; // rientro rapido e senza oscillazioni
 const SBAM_RITORNO_SCALA = 0.2; // ritorno rapido della scala a 1
 const SBAM_ACCENTO = 1; // flash rosso all'impatto
 const SBAM_SBIADIMENTO_ACCENTO = 0.85; // durata del flash rosso
-const SBAM_SCOSSA = 18; // intensità della scossa del canvas
+const SBAM_SCOSSA = 24; // intensità della scossa del canvas
 const SBAM_FERMO_IMMAGINE = 3; // fotogrammi di sospensione all'impatto
+const SBAM_ESPANSIONE = 0.08; // ingrandimento della tela all'impatto
+const SBAM_ESPANSIONE_DECADIMENTO = 0.75; // quanto l'ingrandimento cala a ogni fotogramma
+const SBAM_ESPANSIONE_MINIMA = 0.002; // sotto questa l'ingrandimento è finito
 
 // ============================================================
 // PARAMETRI DI ZANG
@@ -209,6 +213,8 @@ let coloreAccento;
 let scossaIntensita = 0;
 let scossaX = 0;
 let scossaY = 0;
+let espansione = 0; // ingrandimento della tela, da 0 in su
+let telaCanvas; // l'elemento canvas, da ingrandire all'impatto di SBAM
 let fermoImmagine = 0; // fotogrammi in cui le lettere non vengono aggiornate
 
 // ============================================================
@@ -221,6 +227,10 @@ async function setup() {
 
   font = await loadFont("Anton-Regular.ttf");
   textFont(font);
+
+  // il canvas disegnato resta 800x600; a ingrandirsi sarà solo la sua
+  // visualizzazione, attraverso lo stile dell'elemento
+  telaCanvas = document.querySelector("canvas");
 
   coloreTesto = color(COLORE_TESTO);
   coloreAccento = color(COLORE_ACCENTO);
@@ -244,6 +254,8 @@ function draw() {
   }
 
   aggiornaScossa();
+  aggiornaEspansione();
+  applicaEspansioneTela();
 
   push();
   translate(scossaX, scossaY);
@@ -272,6 +284,35 @@ function aggiornaScossa() {
   scossaX = random(-1, 1) * scossaIntensita;
   scossaY = random(-1, 1) * scossaIntensita;
   scossaIntensita *= SCOSSA_DECADIMENTO;
+}
+
+// l'ingrandimento cala rapidamente fino a sparire, senza oscillare
+function aggiornaEspansione() {
+  // durante il fermo-immagine il picco resta fermo, come le lettere
+  if (fermoImmagine > 0) return;
+
+  if (espansione < SBAM_ESPANSIONE_MINIMA) {
+    espansione = 0;
+    return;
+  }
+
+  espansione *= SBAM_ESPANSIONE_DECADIMENTO;
+}
+
+// l'ingrandimento va sul canvas vero e proprio, non sul disegno: il bordo
+// della tela si dilata oltre la cornice e il testo resta intero
+function applicaEspansioneTela() {
+  if (!telaCanvas) return;
+
+  if (espansione === 0) {
+    telaCanvas.style.transform = "";
+    document.body.style.overflow = "";
+    return;
+  }
+
+  // durante il colpo le barre di scorrimento distrarrebbero
+  document.body.style.overflow = "hidden";
+  telaCanvas.style.transform = "scale(" + (1 + espansione) + ")";
 }
 
 // sospende l'aggiornamento delle lettere per il numero di fotogrammi indicato
@@ -497,6 +538,8 @@ function attenua(t) {
 function mousePressed() {
   if (!mouseButton.left) return;
 
+  nascondiIstruzioni();
+
   const parola = parolaPiuVicina(mouseX, mouseY);
   attivaParola(parola, mouseX, mouseY);
 }
@@ -510,12 +553,35 @@ function keyPressed(event) {
   // se il tasto resta premuto, non riattivo il comportamento a raffica
   if (event && event.repeat) return;
 
-  // la parola successiva diventa dominante e mostra il suo comportamento
-  indiceDominante = (indiceDominante + 1) % PAROLE.length;
+  // solo le frecce su e giù spostano la parola dominante
+  const tasto = event ? event.key : key;
+  let passo = 0;
+
+  if (tasto === "ArrowDown") {
+    passo = 1; // giù: la parola successiva, più in basso nell'elenco
+  } else if (tasto === "ArrowUp") {
+    passo = -1; // su: la parola precedente, più in alto
+  } else {
+    return;
+  }
+
+  // senza questo la freccia farebbe scorrere la pagina
+  if (event) event.preventDefault();
+
+  nascondiIstruzioni();
+
+  // la nuova parola diventa dominante e mostra il suo comportamento
+  indiceDominante = (indiceDominante + passo + PAROLE.length) % PAROLE.length;
   disponiParole();
 
   const parola = parole[indiceDominante];
   attivaParola(parola, width / 2, height / 2);
+}
+
+// il menù delle istruzioni sotto la tela sparisce al primo gesto
+function nascondiIstruzioni() {
+  const istruzioni = document.getElementById("istruzioni");
+  if (istruzioni) istruzioni.classList.add("nascosto");
 }
 
 // ============================================================
@@ -562,10 +628,23 @@ function aggiornaBoom(parola) {
   }
 }
 
+// quota a cui la parola tocca il bordo inferiore, misurata sull'altezza delle
+// sue lettere: così la parola dominante, più grande, non esce dalla tela
+function bordoInferioreTumb(parola) {
+  let mezzaAltezza = 0;
+
+  for (const lettera of parola.lettere) {
+    mezzaAltezza = max(mezzaAltezza, lettera.dimensione * lettera.scalaY / 2);
+  }
+
+  return ALTEZZA_TELA - TUMB_MARGINE - mezzaAltezza;
+}
+
 // TUMB: caduta pesante, schiacciamento, due rimbalzi corti e rientro
 function aggiornaTumb(parola) {
   const lettereParola = parola.lettere;
   const prima = lettereParola[0];
+  const bordo = bordoInferioreTumb(parola);
 
   if (parola.tempo === 0) {
     parola.stato = "caduta";
@@ -590,13 +669,13 @@ function aggiornaTumb(parola) {
       lettera.velocita.y += TUMB_GRAVITA;
     }
 
-    if (prima.posizione.y >= TUMB_BORDO) {
+    if (prima.posizione.y >= bordo) {
       parola.stato = "schiacciamento";
       parola.tempoStato = 0;
       parola.velocitaImpatto = abs(prima.velocita.y);
 
       for (const lettera of lettereParola) {
-        lettera.posizione.y = TUMB_BORDO;
+        lettera.posizione.y = bordo;
         lettera.velocita.set(0, 0);
         lettera.attrito = 1;
         lettera.ritornoCasa = 0;
@@ -651,12 +730,12 @@ function aggiornaTumb(parola) {
       lettera.velocita.y += TUMB_GRAVITA;
     }
 
-    if (prima.posizione.y >= TUMB_BORDO) {
+    if (prima.posizione.y >= bordo) {
       if (parola.rimbalzi < TUMB_RIMBALZI_MASSIMI) {
         parola.rimbalzi++;
 
         for (const lettera of lettereParola) {
-          lettera.posizione.y = TUMB_BORDO;
+          lettera.posizione.y = bordo;
           lettera.velocita.y = -abs(lettera.velocita.y)
             * TUMB_COEFFICIENTE_RIMBALZO;
           lettera.scalaX = TUMB_SCHIACCIAMENTO_X;
@@ -746,6 +825,8 @@ function aggiornaSbam(parola) {
       parola.tempoStato = 0;
 
       avviaScossa(SBAM_SCOSSA);
+      // la tela sembra allargarsi per un istante, come se il colpo la gonfiasse
+      espansione = max(espansione, SBAM_ESPANSIONE);
       avviaFermoImmagine(SBAM_FERMO_IMMAGINE);
     }
     return;

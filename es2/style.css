@@ -11,7 +11,7 @@ body {
   flex-direction: column;
   justify-content: safe center;
   align-items: safe center;
-  background: #0c0c10;
+  background: #17171f; /* circa il 5% più chiaro del canvas (#0c0c10) */
 }
 
 canvas {
@@ -26,4 +26,21 @@ canvas {
   line-height: 1.4;
   text-align: center;
   color: #b9b5ac;
+  transition: opacity 0.3s ease;
+  /* resta visibile pochi secondi, poi scompare da sola */
+  animation: scompare 1s ease 6s forwards;
+}
+
+@keyframes scompare {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* sparisce subito, senza aspettare, quando si interagisce con la tela */
+#istruzioni.nascosto {
+  animation: none;
+  opacity: 0;
+  visibility: hidden;
 }
